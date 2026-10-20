@@ -1,0 +1,262 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111126">
+  <title>PlayMix — Minijuegos</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #111126;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+    }
+
+    main {
+      max-width: 760px;
+      margin: auto;
+      padding: 28px 18px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      background: #8b5cf6;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 26px;
+    }
+
+    h1, h2, p { margin-top: 0; }
+    h1 { margin-bottom: 4px; }
+    .muted { color: #b9b9d4; }
+
+    .panel {
+      padding: 24px;
+      background: #1c1c38;
+      border: 1px solid #353554;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+
+    .games {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .game {
+      background: #242443;
+      border: 1px solid #393957;
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .emoji { font-size: 30px; }
+    .game h3 { margin-bottom: 6px; }
+    .game p { font-size: 13px; margin-bottom: 0; }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #a78bfa;
+      color: #17132b;
+      border: 0;
+      border-radius: 12px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    #arena {
+      height: 260px;
+      background: #111126;
+      border: 1px solid #414166;
+      border-radius: 16px;
+      margin: 18px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #target {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      padding: 0;
+      border-radius: 50%;
+      background: #fbbf24;
+      color: #211900;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .stats div {
+      background: #242443;
+      padding: 12px;
+      border-radius: 12px;
+      flex: 1;
+    }
+
+    [hidden] { display: none !important; }
+
+    @media (max-width: 420px) {
+      .panel { padding: 16px; }
+      .game { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="logo">🎮</div>
+    <div>
+      <h1>PlayMix</h1>
+      <div class="muted">Tu dosis diaria de diversión</div>
+    </div>
+  </header>
+
+  <section id="home">
+    <div class="panel">
+      <p class="muted">TU JUEGO DESTACADO</p>
+      <h2>⚡ Toque Relámpago</h2>
+      <p class="muted">
+        Toca el objetivo amarillo tantas veces como puedas
+        en 20 segundos.
+      </p>
+      <button onclick="openGame()">¡Jugar ahora!</button>
+    </div>
+
+    <h2>Explora los juegos</h2>
+    <div class="games">
+      <div class="game">
+        <div class="emoji">⚡</div>
+        <h3>Reflejos</h3>
+        <p class="muted">Disponible ahora</p>
+      </div>
+      <div class="game">
+        <div class="emoji">🧩</div>
+        <h3>Puzles</h3>
+        <p class="muted">Próximamente</p>
+      </div>
+      <div class="game">
+        <div class="emoji">🧠</div>
+        <h3>Trivial</h3>
+        <p class="muted">Próximamente</p>
+      </div>
+      <div class="game">
+        <div class="emoji">🏆</div>
+        <h3>Retos y rankings</h3>
+        <p class="muted">Próximamente</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="play" hidden>
+    <div class="panel">
+      <h2>⚡ Toque Relámpago</h2>
+      <div class="stats">
+        <div>Puntos <strong id="score">0</strong></div>
+        <div>Tiempo <strong id="time">20</strong></div>
+      </div>
+
+      <div id="arena">
+        <button id="target" onclick="hit()" hidden>+</button>
+      </div>
+
+      <p id="message" class="muted">¡Prepárate!</p>
+      <button id="start" onclick="startGame()">Empezar partida</button>
+      <button onclick="goHome()" style="margin-top:10px">
+        Volver al menú
+      </button>
+    </div>
+  </section>
+</main>
+
+<script>
+  const home = document.getElementById("home");
+  const play = document.getElementById("play");
+  const arena = document.getElementById("arena");
+  const target = document.getElementById("target");
+
+  let score = 0;
+  let time = 20;
+  let running = false;
+  let deadline = 0;
+  let timer;
+
+  function openGame() {
+    home.hidden = true;
+    play.hidden = false;
+  }
+
+  function goHome() {
+    clearInterval(timer);
+    running = false;
+    target.hidden = true;
+    play.hidden = true;
+    home.hidden = false;
+  }
+
+  function startGame() {
+    clearInterval(timer);
+    score = 0;
+    time = 20;
+    running = true;
+    deadline = Date.now() + 20000;
+
+    document.getElementById("score").textContent = score;
+    document.getElementById("time").textContent = time;
+    document.getElementById("message").textContent =
+      "¡Toca el objetivo tan rápido como puedas!";
+    document.getElementById("start").hidden = true;
+
+    target.hidden = false;
+    moveTarget();
+
+    timer = setInterval(() => {
+      time = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      document.getElementById("time").textContent = time;
+      if (time <= 0) finishGame();
+    }, 100);
+  }
+
+  function moveTarget() {
+    const maxX = Math.max(0, arena.clientWidth - target.offsetWidth);
+    const maxY = Math.max(0, arena.clientHeight - target.offsetHeight);
+    target.style.left = Math.random() * maxX + "px";
+    target.style.top = Math.random() * maxY + "px";
+  }
+
+  function hit() {
+    if (!running || Date.now() >= deadline) return;
+    score++;
+    document.getElementById("score").textContent = score;
+    moveTarget();
+  }
+
+  function finishGame() {
+    if (!running) return;
+    running = false;
+    clearInterval(timer);
+    target.hidden = true;
+    document.getElementById("start").hidden = false;
+    document.getElementById("start").textContent = "Jugar otra vez";
+    document.getElementById("message").textContent =
+      "¡Partida terminada! Has conseguido " + score + " puntos.";
+  }
+</script>
+</body>
+</html>
